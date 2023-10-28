@@ -1,5 +1,5 @@
 server {
-    server_name 51.250.16.168 andrew12022.hopto.org;
+    server_name andrew12022.hopto.org;
 
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
@@ -23,20 +23,10 @@ server {
 }
 
 server {
-    if ($host = andrew12022.hopto.org) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-    listen 80;
-    server_name andrew12022.hopto.org;
-    return 404; # managed by Certbot
-}
-
-server {
-    server_name 51.250.16.168 kittygramdeploy.myftp.org;
+    server_name kittygramdeploy.myftp.org;
 
     location /media/ {
-        alias /var/www/kittygram/media/;
+        root /var/www/kittygram;
     }
 
     location /api/ {
