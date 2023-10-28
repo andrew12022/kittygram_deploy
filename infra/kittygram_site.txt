@@ -1,0 +1,5 @@
+IP: 51.250.16.168;
+name_taski: https://andrew12022.hopto.org/;
+name_kittygram: https://kittygramdeploy.myftp.org/;
+login: root;
+password: root;
