@@ -11,7 +11,7 @@ Kittygram — социальная сеть для обмена фотограф
 ```
 sudo apt update
 ```
-Затем Ввести команду для проверки
+Затем ввести команду для проверки
 ```
 git --version
 ```
@@ -86,13 +86,21 @@ DEBUG=ваш_режим_работы
 ALLOWED_HOSTS=ваши_адреса
 ```
 
-Запустить веб-сервер:
-
+Подготовить бэкенд-приложение для сбора статики. В файле settings.py указать директорию, куда эту статику нужно сложить
 ```
-python manage.py runserver 0.0.0.0:8000
+STATIC_URL = 'static_backend'
+STATIC_ROOT = BASE_DIR / 'static_backend'
 ```
 
-Бэкенд будет доступен по адресу: http://IP_вашего_сервера:8000/
+Собрать статику бэкенд-приложения
+```
+python manage.py collectstatic
+```
+
+Скопировать директорию static_backend/ в директорию /var/www/название_проекта/
+```
+sudo cp -r путь_к_директории_с_бэкендом/static_backend /var/www/название_проекта
+```
 
 ### Фронтенд (React)
 
@@ -114,15 +122,118 @@ cd kittygram/frontend
 npm i
 ```
 
-Запустить приложение:
-
+Из директории с фронтенд-приложением выполнить команду
 ```
-npm run start
+npm run build
 ```
 
-Фронтенд будет доступен по адресу: http://IP_вашего_сервера:3000/
+Скопировать статику фронтенд-приложения в директорию по умолчанию
+```
+sudo cp -r путь_к_директории_с_фронтенд-приложением/build/. /var/www/имя_проекта/
+```
 
-## Технологии и необходимые инструмены
+### Установка и настройка Gunicorn
+
+В файле зависимостей он уже есть, если его нет, то нужно прописать команду при активированным виртуальным окружении
+```
+pip install gunicorn==20.1.0
+```
+
+Перейти в директорию с файлом manage.py, и запустить Gunicorn
+```
+gunicorn --bind 0.0.0.0:8000 backend.wsgi
+```
+
+Создать файл конфигурации юнита systemd для Gunicorn в директории
+/etc/systemd/system/. Назвать его по шаблону gunicorn_название_проекта.service
+```
+sudo nano /etc/systemd/system/gunicorn_название_проекта.service
+```
+
+Подставьте в код из листинга свои данные
+```
+[Unit]
+Description=gunicorn daemon
+After=network.target
+[Service]
+User=имя_пользователя_в_системе
+WorkingDirectory=/home/имя_пользователя/папка_с_проектом/папка_с_файлом_manage.py/
+ExecStart=/.../venv/bin/gunicorn --bind 0.0.0.0:8000 backend.wsgi:application
+[Install]
+WantedBy=multi-user.target
+```
+
+Запустить Gunicorn в командной строке
+```
+sudo systemctl start gunicorn_название_проекта
+```
+
+Чтобы systemd следил за работой демона Gunicorn, запускал его при старте системы
+и при необходимости перезапускал, использовать команду
+```
+sudo systemctl enable gunicorn_название_проекта
+```
+
+### Установка и настройка Nginx
+
+Если Nginx ещё не установлен на удалённый сервер, установить его
+```
+sudo apt install nginx -y
+```
+
+Запустить Nginx командой
+```
+sudo systemctl start nginx
+```
+
+Обновить настройки Nginx. Для этого открыть файл конфигурации веб-сервера
+```
+sudo nano /etc/nginx/sites-enabled/default
+```
+
+Очистить содержимое файла и записать новые настройки
+```
+server {
+ listen 80;
+ server_name ваш_домен;
+ location /api/ {
+ proxy_pass http://127.0.0.1:8000;
+ }
+
+ location /admin/ {
+ proxy_pass http://127.0.0.1:8000;
+ }
+ location / {
+ root /var/www/имя_проекта;
+ index index.html index.htm;
+ try_files $uri /index.html;
+ }
+}
+```
+
+Сохранить изменения в файле, закрыть его и проверить на корректность
+```
+sudo nano /etc/nginx/sites-enabled/default
+```
+
+Перезагрузить конфигурацию Nginx
+```
+sudo systemctl reload nginx
+```
+
+## Настройка файрвола ufw
+Активировать разрешение принимать запросы только на порты 80, 443 и 22
+```
+sudo ufw allow 'Nginx Full'
+sudo ufw allow OpenSSH
+```
+
+Включить файрвол
+```
+sudo ufw enable
+```
+
+## Технологии и необходимые инструменты
 - Python 3.x
 - Node.js 9.x.x
 - Git
@@ -130,6 +241,7 @@ npm run start
 - Gunicorn 20.x.x
 - Django 3.x.x (backend)
 - React (frontend)
+- python-dotenv 
 
 ## Ссылка на приложение
 - https://kittygramdeploy.myftp.org
