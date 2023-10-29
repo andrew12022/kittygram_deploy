@@ -216,7 +216,7 @@ server {
 
 Сохранить изменения в файле, закрыть его и проверить на корректность
 ```
-sudo nano /etc/nginx/sites-enabled/default
+sudo nginx -t
 ```
 
 Перезагрузить конфигурацию Nginx
