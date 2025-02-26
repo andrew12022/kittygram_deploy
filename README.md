@@ -237,14 +237,14 @@ sudo ufw enable
 ```
 
 ## Технологии и необходимые инструменты
-- Python 3.9
-- Node.js 9.x.x
-- Nginx
-- Gunicorn 20.x.x
-- Django 3.2.16
-- React 
+- Python
+- Django
+- Django REST framework
 - python-dotenv
-- DRF
+- Nginx
+- Gunicorn
+- Node.js
+- React
 
 ## Автор
 - [Андрей Елистратов](https://github.com/andrew12022)
